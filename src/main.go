@@ -100,10 +100,10 @@ func fetchFilings(w http.ResponseWriter, r *http.Request) {
 	reportDates, _ := recentFilings["reportDate"].([]interface{})
 	primaryDocs, _ := recentFilings["primaryDocument"].([]interface{})
 
-	// Filter the filings for 10-Q and 10-K
+	// Filter the filings for 10-K
 	filteredFilings := make([]map[string]interface{}, 0)
 	for i, formType := range formTypes {
-		// Ensure formType is "10-Q" or "10-K"
+		// Ensure formType is "10-K"
 		if formType == "10-K" {
 			// Check if the required fields are within bounds before accessing them
 			if i >= len(filingDates) || i >= len(accessionNos) || i >= len(primaryDocs) {
@@ -141,7 +141,7 @@ func fetchFilings(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func scrapeFinancialData(cik string, accessionNo string, primaryDoc string) ([]string, error) {
+func scrapeFinancialData(cik string, accessionNo string, primaryDoc string) ([]Filing, error) {
 	// Construct the URL to the filing document
 	accessionNoNoDashes := strings.ReplaceAll(accessionNo, "-", "")
 	url := fmt.Sprintf("https://www.sec.gov/Archives/edgar/data/%s/%s/%s", cik, accessionNoNoDashes, primaryDoc)
@@ -180,22 +180,14 @@ func scrapeFinancialData(cik string, accessionNo string, primaryDoc string) ([]s
 	}
 
 	// Example: Scrape financial data by looking for table rows with financial data
-	financialData := []string{}
+	financialData := []Filing{}
 
 	doc.Find("table").Each(func(i int, table *goquery.Selection) {
 		table.Find("tr").Each(func(j int, row *goquery.Selection) {
-			// Collect the table row text
-			rowText := row.Text()
+			// Fill in all Filing fields
 
-			// Now, check for your specific text
-			if strings.Contains(strings.ToLower(rowText), "total net sales") { // Use case-insensitive matching
-				financialData = append(financialData, rowText)
-
-			}
 		})
 	})
-
-	log.Printf("Financial data: %v\n", financialData)
 
 	return financialData, nil
 }
