@@ -2,6 +2,8 @@
 
 Tiny weekend project that allows querying annual reports from thousands of publicly traded companies without having to scrape data from the SEC.
 
+<br>
+
 Some improvements that need to be made:
 
 - [ ] Improve taxnonomy between companies, i.e, one company may call revenue "Net revenues" whereas others might call it "total revenues"
@@ -11,8 +13,10 @@ Some improvements that need to be made:
 
 ```
 curl "https://financial-reports-production.up.railway.app/filings?ticker=AAPL"
+```
 
-Output:
+### Output
+```
 [
   {
     "accessionNo": "0000320193-23-000106",
