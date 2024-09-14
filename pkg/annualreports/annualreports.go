@@ -11,12 +11,11 @@ import (
 )
 
 type FinancialData struct {
-	TotalNetSales           int `json:"totalNetSales"`
-	TotalCostOfSales        int `json:"totalCostOfSales"`
-	TotalOperatingExpenses  int `json:"totalOperatingExpenses"`
-	OperatingExpenses       int `json:"operatingExpenses"`
-	BasicEarningsPerShare   int `json:"basicEarningsPerShare"`
-	DilutedEarningsPerShare int `json:"dilutedEarningsPerShare"`
+	TotalNetSales           string `json:"totalNetSales"`
+	TotalCostOfSales        string `json:"totalCostOfSales"`
+	TotalOperatingExpenses  string `json:"totalOperatingExpenses"`
+	BasicEarningsPerShare   string `json:"basicEarningsPerShare"`
+	DilutedEarningsPerShare string `json:"dilutedEarningsPerShare"`
 }
 
 type Filing struct {
@@ -66,14 +65,66 @@ func ScrapeFinancialData(cik string, accessionNo string, primaryDoc string) ([]F
 		return nil, fmt.Errorf("failed to parse document: %v", err)
 	}
 
-	// Example: Scrape financial data by looking for table rows with financial data
-	financialData := []FinancialData{}
-
+	// Initialize a slice to store financial data for multiple reports
+	var financialDataReports []FinancialData
+	found := false
+	var data FinancialData
+	// Loop through each table and search for rows that contain financial data
 	doc.Find("table").Each(func(i int, table *goquery.Selection) {
+		// Initialize a new FinancialData object for this report
+
+		// Loop through each row (tr) in the table
 		table.Find("tr").Each(func(j int, row *goquery.Selection) {
+			// Search for each field by matching the label in one of the cells
+			row.Find("td").Each(func(k int, cell *goquery.Selection) {
+				cellText := strings.ToLower(strings.TrimSpace(cell.Text()))
 
+				// Look for specific fields based on the text in the cell
+				switch {
+				case strings.Contains(cellText, "total net sales") || strings.Contains(cellText, "net sales") || strings.Contains(cellText, "net revenue") || strings.Contains(cellText, "total revenues") || strings.Contains(cellText, "revenues"):
+					value := extractStringFromNextCell(row, k, 2)
+					data.TotalNetSales = value
+					found = true
+				case strings.Contains(cellText, "total cost of sales"):
+					value := extractStringFromNextCell(row, k, 1)
+					data.TotalCostOfSales = value
+					found = true
+				case strings.Contains(cellText, "total operating expenses"):
+					value := extractStringFromNextCell(row, k, 1)
+					data.TotalOperatingExpenses = value
+					found = true
+
+				case strings.Contains(cellText, "basic"):
+					value := extractStringFromNextCell(row, k, 2)
+					data.BasicEarningsPerShare = value
+					found = true
+				case strings.Contains(cellText, "diluted"):
+					value := extractStringFromNextCell(row, k, 2)
+					data.DilutedEarningsPerShare = value
+					found = true
+				}
+			})
 		})
-	})
 
-	return financialData, nil
+		// Only add the financial data if we found relevant fields in this table
+
+	})
+	if found {
+		financialDataReports = append(financialDataReports, data)
+	}
+
+	// Return the slice of financial data objects
+	return financialDataReports, nil
+}
+
+// Helper function to extract a string from the next cell in the row
+func extractStringFromNextCell(row *goquery.Selection, index int, skip int) string {
+	var value string
+	row.Find("td").Each(func(k int, cell *goquery.Selection) {
+		if k == index+skip {
+			// Get the text from the next cell
+			value = strings.TrimSpace(cell.Text())
+		}
+	})
+	return value
 }
