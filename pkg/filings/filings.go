@@ -20,7 +20,13 @@ func FetchFilings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tickerToCIK, err := LoadTickerToCIK("pkg/data/ticker-to-cik.csv")
+	wd, err := os.Getwd()
+	if err != nil {
+		log.Fatalf("Error getting working directory: %v\n", err)
+	}
+	csvFile := fmt.Sprintf("%s/pkg/data/ticker-to-cik.csv", wd)
+
+	tickerToCIK, err := LoadTickerToCIK(csvFile)
 	if err != nil {
 		log.Fatalf("Error loading CSV file: %v\n", err)
 	}
