@@ -39,7 +39,6 @@ func fetchFilings(w http.ResponseWriter, r *http.Request) {
 
 	// Make request to the EDGAR API
 	url := fmt.Sprintf("https://data.sec.gov/submissions/CIK%s.json", cik)
-	log.Printf("Fetching URL: %s\n", url)
 
 	// Create a new request
 	req, err := http.NewRequest("GET", url, nil)
@@ -141,7 +140,7 @@ func fetchFilings(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func scrapeFinancialData(cik string, accessionNo string, primaryDoc string) ([]Filing, error) {
+func scrapeFinancialData(cik string, accessionNo string, primaryDoc string) ([]FinancialData, error) {
 	// Construct the URL to the filing document
 	accessionNoNoDashes := strings.ReplaceAll(accessionNo, "-", "")
 	url := fmt.Sprintf("https://www.sec.gov/Archives/edgar/data/%s/%s/%s", cik, accessionNoNoDashes, primaryDoc)
@@ -180,7 +179,7 @@ func scrapeFinancialData(cik string, accessionNo string, primaryDoc string) ([]F
 	}
 
 	// Example: Scrape financial data by looking for table rows with financial data
-	financialData := []Filing{}
+	financialData := []FinancialData{}
 
 	doc.Find("table").Each(func(i int, table *goquery.Selection) {
 		table.Find("tr").Each(func(j int, row *goquery.Selection) {
