@@ -28,7 +28,7 @@ type Filing struct {
 	FinancialData FinancialData `json:"financialData"`
 }
 
-func scrapeFinancialData(cik string, accessionNo string, primaryDoc string) ([]FinancialData, error) {
+func ScrapeFinancialData(cik string, accessionNo string, primaryDoc string) ([]FinancialData, error) {
 	// Construct the URL to the filing document
 	accessionNoNoDashes := strings.ReplaceAll(accessionNo, "-", "")
 	url := fmt.Sprintf("https://www.sec.gov/Archives/edgar/data/%s/%s/%s", cik, accessionNoNoDashes, primaryDoc)
