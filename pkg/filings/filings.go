@@ -1,21 +1,34 @@
 package filings
 
 import (
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"reflect"
 
 	"github.com/kevinroosey/financial-reports/pkg/annualreports"
 )
 
 func FetchFilings(w http.ResponseWriter, r *http.Request) {
-	cik := r.URL.Query().Get("cik")
-	if cik == "" {
-		http.Error(w, "CIK is required", http.StatusBadRequest)
+	ticker := r.URL.Query().Get("ticker")
+	if ticker == "" {
+		http.Error(w, "Ticker is required", http.StatusBadRequest)
 		return
+	}
+
+	tickerToCIK, err := LoadTickerToCIK("pkg/data/ticker-to-cik.csv")
+	if err != nil {
+		log.Fatalf("Error loading CSV file: %v\n", err)
+	}
+
+	// Example: Find the CIK for a given ticker
+	cik, err := GetCIKByTicker(ticker, tickerToCIK)
+	if err != nil {
+		log.Fatalf("Error finding CIK: %v\n", err)
 	}
 
 	// Make request to the EDGAR API
@@ -119,4 +132,48 @@ func FetchFilings(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Failed to encode filtered filings: %v\n", err)
 		http.Error(w, "Failed to encode filings", http.StatusInternalServerError)
 	}
+}
+
+func GetCIKByTicker(ticker string, tickerToCIK map[string]string) (string, error) {
+	// Lookup the ticker in the map
+	if cik, exists := tickerToCIK[ticker]; exists {
+		return cik, nil
+	}
+	return "", fmt.Errorf("CIK not found for ticker: %s", ticker)
+}
+
+func LoadTickerToCIK(csvFile string) (map[string]string, error) {
+	// Open the CSV file
+	file, err := os.Open(csvFile)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open CSV file: %v", err)
+	}
+	defer file.Close()
+
+	// Create a new CSV reader
+	reader := csv.NewReader(file)
+
+	// Read all the records
+	records, err := reader.ReadAll()
+	if err != nil {
+		return nil, fmt.Errorf("failed to read CSV file: %v", err)
+	}
+
+	// Create a map to store ticker-to-CIK mappings
+	tickerToCIK := make(map[string]string)
+
+	// Loop through the records and populate the map (skipping the header)
+	for i, record := range records {
+		if i == 0 {
+			continue // Skip header
+		}
+		// Ensure the record has at least two fields (CIK and Ticker)
+		if len(record) >= 2 {
+			cik := record[0]
+			ticker := record[1]
+			tickerToCIK[ticker] = cik
+		}
+	}
+
+	return tickerToCIK, nil
 }

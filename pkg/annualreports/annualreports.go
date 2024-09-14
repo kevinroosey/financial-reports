@@ -71,7 +71,6 @@ func ScrapeFinancialData(cik string, accessionNo string, primaryDoc string) ([]F
 
 	doc.Find("table").Each(func(i int, table *goquery.Selection) {
 		table.Find("tr").Each(func(j int, row *goquery.Selection) {
-			// Fill in all Filing fields
 
 		})
 	})
