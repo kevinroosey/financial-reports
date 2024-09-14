@@ -128,12 +128,18 @@ func FetchFilings(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Send the filtered filings as the response
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(filteredFilings); err != nil {
-		log.Printf("Failed to encode filtered filings: %v\n", err)
+
+	// Marshal the filtered filings into pretty-printed JSON
+	prettyJSON, err := json.MarshalIndent(filteredFilings, "", "  ")
+	if err != nil {
+		log.Printf("Failed to generate pretty JSON: %v\n", err)
 		http.Error(w, "Failed to encode filings", http.StatusInternalServerError)
+		return
 	}
+
+	// Write the pretty-printed JSON to the response
+	w.Write(prettyJSON)
 }
 
 func GetCIKByTicker(ticker string, tickerToCIK map[string]string) (string, error) {
