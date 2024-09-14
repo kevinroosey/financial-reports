@@ -1,4 +1,4 @@
-package main
+package filings
 
 import (
 	"encoding/json"
@@ -7,28 +7,7 @@ import (
 	"log"
 	"net/http"
 	"reflect"
-	"strings"
-
-	"github.com/PuerkitoBio/goquery"
 )
-
-type FinancialData struct {
-	TotalNetSales           int `json:"totalNetSales"`
-	TotalCostOfSales        int `json:"totalCostOfSales"`
-	TotalOperatingExpenses  int `json:"totalOperatingExpenses"`
-	OperatingExpenses       int `json:"operatingExpenses"`
-	BasicEarningsPerShare   int `json:"basicEarningsPerShare"`
-	DilutedEarningsPerShare int `json:"dilutedEarningsPerShare"`
-}
-
-type Filing struct {
-	Form          string        `json:"form"`
-	FilingDate    string        `json:"filingDate"`
-	AccessionNo   string        `json:"accessionNo"`
-	ReportDate    string        `json:"reportDate"`
-	PrimaryDoc    string        `json:"primaryDoc"`
-	FinancialData FinancialData `json:"financialData"`
-}
 
 func fetchFilings(w http.ResponseWriter, r *http.Request) {
 	cik := r.URL.Query().Get("cik")
@@ -138,61 +117,4 @@ func fetchFilings(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Failed to encode filtered filings: %v\n", err)
 		http.Error(w, "Failed to encode filings", http.StatusInternalServerError)
 	}
-}
-
-func scrapeFinancialData(cik string, accessionNo string, primaryDoc string) ([]FinancialData, error) {
-	// Construct the URL to the filing document
-	accessionNoNoDashes := strings.ReplaceAll(accessionNo, "-", "")
-	url := fmt.Sprintf("https://www.sec.gov/Archives/edgar/data/%s/%s/%s", cik, accessionNoNoDashes, primaryDoc)
-
-	// Create the request
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		log.Printf("Failed to create request: %v\n", err)
-		return nil, fmt.Errorf("failed to create request: %v", err)
-	}
-
-	// Set a custom User-Agent header
-	req.Header.Set("User-Agent", "KevinWebScraping/1.0 (kevinroosey@gmail.com)")
-
-	// Send the request
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Printf("Failed to fetch filing document: %v\n", err)
-		return nil, fmt.Errorf("failed to fetch filing document: %v", err)
-	}
-	defer resp.Body.Close()
-
-	// Read the body of the document
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Printf("Failed to read document body: %v\n", err)
-		return nil, fmt.Errorf("failed to read document body: %v", err)
-	}
-
-	// Parse the document with goquery
-	doc, err := goquery.NewDocumentFromReader(strings.NewReader(string(body)))
-	if err != nil {
-		log.Printf("Failed to parse document: %v\n", err)
-		return nil, fmt.Errorf("failed to parse document: %v", err)
-	}
-
-	// Example: Scrape financial data by looking for table rows with financial data
-	financialData := []FinancialData{}
-
-	doc.Find("table").Each(func(i int, table *goquery.Selection) {
-		table.Find("tr").Each(func(j int, row *goquery.Selection) {
-			// Fill in all Filing fields
-
-		})
-	})
-
-	return financialData, nil
-}
-
-func main() {
-	http.HandleFunc("/filings", fetchFilings)
-	log.Println("Server running on http://localhost:8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
 }

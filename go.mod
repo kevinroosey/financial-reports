@@ -1,4 +1,4 @@
-module financial-reports
+module github.com/kevinroosey/financial-reports
 
 go 1.18
 
