@@ -7,6 +7,8 @@ import (
 	"log"
 	"net/http"
 	"reflect"
+
+	"github.com/kevinroosey/financial-reports/pkg/annualreports"
 )
 
 func fetchFilings(w http.ResponseWriter, r *http.Request) {
@@ -99,7 +101,7 @@ func fetchFilings(w http.ResponseWriter, r *http.Request) {
 			}
 
 			// Scrape financial data for the filing
-			financialData, err := scrapeFinancialData(cik, accessionNos[i].(string), primaryDocs[i].(string))
+			financialData, err := annualreports.scrapeFinancialData(cik, accessionNos[i].(string), primaryDocs[i].(string))
 			if err != nil {
 				log.Printf("Error scraping financial data: %v\n", err)
 				http.Error(w, "Error scraping financial data", http.StatusInternalServerError)

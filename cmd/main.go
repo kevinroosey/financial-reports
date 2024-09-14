@@ -3,26 +3,10 @@ package main
 import (
 	"log"
 	"net/http"
-	// Update this import path
+	// import the package "filings" from the "filings" directory
+	"github.com/kevinroosey/financial-reports/pkg/filings"
 )
 
-type FinancialData struct {
-	TotalNetSales           int `json:"totalNetSales"`
-	TotalCostOfSales        int `json:"totalCostOfSales"`
-	TotalOperatingExpenses  int `json:"totalOperatingExpenses"`
-	OperatingExpenses       int `json:"operatingExpenses"`
-	BasicEarningsPerShare   int `json:"basicEarningsPerShare"`
-	DilutedEarningsPerShare int `json:"dilutedEarningsPerShare"`
-}
-
-type Filing struct {
-	Form          string        `json:"form"`
-	FilingDate    string        `json:"filingDate"`
-	AccessionNo   string        `json:"accessionNo"`
-	ReportDate    string        `json:"reportDate"`
-	PrimaryDoc    string        `json:"primaryDoc"`
-	FinancialData FinancialData `json:"financialData"`
-}
 
 func main() {
 	http.HandleFunc("/filings", filings.fetchFilings)

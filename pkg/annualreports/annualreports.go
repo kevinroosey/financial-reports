@@ -1,4 +1,4 @@
-package scrapeFinancialData
+package annualreports
 
 import (
 	"fmt"
@@ -9,6 +9,24 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 )
+
+type FinancialData struct {
+	TotalNetSales           int `json:"totalNetSales"`
+	TotalCostOfSales        int `json:"totalCostOfSales"`
+	TotalOperatingExpenses  int `json:"totalOperatingExpenses"`
+	OperatingExpenses       int `json:"operatingExpenses"`
+	BasicEarningsPerShare   int `json:"basicEarningsPerShare"`
+	DilutedEarningsPerShare int `json:"dilutedEarningsPerShare"`
+}
+
+type Filing struct {
+	Form          string        `json:"form"`
+	FilingDate    string        `json:"filingDate"`
+	AccessionNo   string        `json:"accessionNo"`
+	ReportDate    string        `json:"reportDate"`
+	PrimaryDoc    string        `json:"primaryDoc"`
+	FinancialData FinancialData `json:"financialData"`
+}
 
 func scrapeFinancialData(cik string, accessionNo string, primaryDoc string) ([]FinancialData, error) {
 	// Construct the URL to the filing document
