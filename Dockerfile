@@ -9,6 +9,10 @@ RUN go mod download
 # Copy the source code
 COPY . .
 
+# Copy the CSV file into the container
+COPY pkg/data/ticker-to-cik.csv /app/pkg/data/ticker-to-cik.csv
+
+
 # Build the static binary
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o out ./cmd
 
