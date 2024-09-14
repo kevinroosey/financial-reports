@@ -1,7 +1,8 @@
 # financial-reports
 
-Tiny weekend project that allows querying annual reports from thousands of publicly traded companies without having to scrape data from the SEC. /
+Tiny weekend project that allows querying annual reports from thousands of publicly traded companies without having to scrape data from the SEC.
 
+___
 
 Some improvements that need to be made:
 
