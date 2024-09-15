@@ -13,6 +13,17 @@ import (
 	"github.com/joho/godotenv"
 )
 
+var taxonomy = map[string][]string{
+	"TotalNetSales":           {"total net sales", "net sales", "net revenue", "revenues", "total revenues"},
+	"TotalCostOfSales":        {"total cost of sales", "cost of goods sold", "cogs", "cost of sales", "cost of revenue"},
+	"TotalOperatingExpenses":  {"total operating expenses", "operating expenses"},
+	"GrossProfit":             {"gross profit"},
+	"OperatingIncome":         {"operating income", "operating profit"},
+	"NetIncome":               {"net income", "net earnings", "profit"},
+	"BasicEarningsPerShare":   {"basic earnings per share", "basic eps", "basic"},
+	"DilutedEarningsPerShare": {"diluted earnings per share", "diluted eps", "diluted"},
+}
+
 type FinancialData struct {
 	TotalNetSales           int64   `json:"totalNetSales"`
 	TotalCostOfSales        int64   `json:"totalCostOfSales"`
@@ -85,33 +96,37 @@ func ScrapeFinancialData(cik string, accessionNo string, primaryDoc string) ([]F
 
 		// Loop through each row (tr) in the table
 		table.Find("tr").Each(func(j int, row *goquery.Selection) {
-			// Search for each field by matching the label in one of the cells
 			row.Find("td").Each(func(k int, cell *goquery.Selection) {
 				cellText := strings.ToLower(strings.TrimSpace(cell.Text()))
 
-				// Look for specific fields based on the text in the cell
-				switch {
-				case strings.Contains(cellText, "total net sales") || strings.Contains(cellText, "net sales") || strings.Contains(cellText, "net revenue") || strings.Contains(cellText, "total revenues") || strings.Contains(cellText, "revenues"):
-					value := extractIntFromNextCell(row, k, 2)
-					data.TotalNetSales = value
-					found = true
-				case strings.Contains(cellText, "total cost of sales"):
-					value := extractIntFromNextCell(row, k, 1)
-					data.TotalCostOfSales = value
-					found = true
-				case strings.Contains(cellText, "total operating expenses"):
-					value := extractIntFromNextCell(row, k, 1)
-					data.TotalOperatingExpenses = value
-					found = true
-
-				case strings.Contains(cellText, "basic"):
-					value := extractFloatFromNextCell(row, k, 2)
-					data.BasicEarningsPerShare = value
-					found = true
-				case strings.Contains(cellText, "diluted"):
-					value := extractFloatFromNextCell(row, k, 2)
-					data.DilutedEarningsPerShare = value
-					found = true
+				for key, terms := range taxonomy {
+					for _, term := range terms {
+						if strings.Contains(cellText, term) {
+							switch key {
+							case "TotalNetSales":
+								value := extractIntFromNextCell(row, k, 2)
+								data.TotalNetSales = value
+								found = true
+							case "TotalCostOfSales":
+								value := extractIntFromNextCell(row, k, 1)
+								data.TotalCostOfSales = value
+								found = true
+							case "TotalOperatingExpenses":
+								value := extractIntFromNextCell(row, k, 1)
+								data.TotalOperatingExpenses = value
+								found = true
+							case "BasicEarningsPerShare":
+								value := extractFloatFromNextCell(row, k, 2)
+								data.BasicEarningsPerShare = value
+								found = true
+							case "DilutedEarningsPerShare":
+								value := extractFloatFromNextCell(row, k, 2)
+								data.DilutedEarningsPerShare = value
+								found = true
+							}
+							break
+						}
+					}
 				}
 			})
 		})
