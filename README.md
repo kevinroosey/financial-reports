@@ -23,11 +23,11 @@ curl "https://financial-reports-production.up.railway.app/filings?ticker=AAPL"
     "filingDate": "2023-11-03",
     "financialData": [
       {
-        "totalNetSales": "383,285",
-        "totalCostOfSales": "214,137",
-        "totalOperatingExpenses": "54,847",
-        "basicEarningsPerShare": "6.16",
-        "dilutedEarningsPerShare": "6.13"
+        "totalNetSales": 383285000000,
+        "totalCostOfSales": 214137000000,
+        "totalOperatingExpenses": 54847000000,
+        "basicEarningsPerShare": 6.16,
+        "dilutedEarningsPerShare": 6.13
       }
     ],
     "form": "10-K",
@@ -39,11 +39,11 @@ curl "https://financial-reports-production.up.railway.app/filings?ticker=AAPL"
     "filingDate": "2022-10-28",
     "financialData": [
       {
-        "totalNetSales": "394,328",
-        "totalCostOfSales": "223,546",
-        "totalOperatingExpenses": "51,345",
-        "basicEarningsPerShare": "6.15",
-        "dilutedEarningsPerShare": "6.11"
+        "totalNetSales": 394328000000,
+        "totalCostOfSales": 223546000000,
+        "totalOperatingExpenses": 51345000000,
+        "basicEarningsPerShare": 6.15,
+        "dilutedEarningsPerShare": 6.11
       }
     ],
     "form": "10-K",
