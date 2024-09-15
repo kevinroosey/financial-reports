@@ -22,9 +22,6 @@ RUN apk --no-cache add ca-certificates
 # Copy the Go binary from the builder stage
 COPY --from=builder /app/out .
 
-# Copy the CSV file to the same directory as the binary
-COPY --from=builder /app/pkg/data/ticker-to-cik.csv .
-
 # Run the binary
 CMD ["./out"]
 
