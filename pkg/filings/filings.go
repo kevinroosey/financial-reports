@@ -10,17 +10,30 @@ import (
 	"os"
 	"reflect"
 
+	"github.com/joho/godotenv"
 	"github.com/kevinroosey/financial-reports/pkg/annualreports"
 )
 
 func FetchFilings(w http.ResponseWriter, r *http.Request) {
+
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Error loading .env file")
+	}
+
 	ticker := r.URL.Query().Get("ticker")
 	if ticker == "" {
 		http.Error(w, "Ticker is required", http.StatusBadRequest)
 		return
 	}
+	env := os.Getenv("ENVIRONMENT")
 
-	csvFile := "/root/ticker-to-cik.csv"
+	var csvFile string
+	if env == "development" {
+		csvFile = "../ticker-to-cik.csv"
+	} else {
+		csvFile = "../ticker-to-cik.csv"
+	}
 
 	tickerToCIK, err := LoadTickerToCIK(csvFile)
 	if err != nil {
@@ -46,6 +59,7 @@ func FetchFilings(w http.ResponseWriter, r *http.Request) {
 
 	// Set required headers
 	reqHeaderStr := fmt.Sprintf("%s (%s)", os.Getenv("APP_NAME"), os.Getenv("APP_EMAIL"))
+	fmt.Println(reqHeaderStr)
 	req.Header.Set("User-Agent", reqHeaderStr)
 
 	// Send the request
@@ -153,6 +167,7 @@ func GetCIKByTicker(ticker string, tickerToCIK map[string]string) (string, error
 
 func LoadTickerToCIK(csvFile string) (map[string]string, error) {
 	// Open the CSV file
+
 	file, err := os.Open(csvFile)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open CSV file: %v", err)

@@ -6,17 +6,19 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/joho/godotenv"
 )
 
 type FinancialData struct {
-	TotalNetSales           string `json:"totalNetSales"`
-	TotalCostOfSales        string `json:"totalCostOfSales"`
-	TotalOperatingExpenses  string `json:"totalOperatingExpenses"`
-	BasicEarningsPerShare   string `json:"basicEarningsPerShare"`
-	DilutedEarningsPerShare string `json:"dilutedEarningsPerShare"`
+	TotalNetSales           int64   `json:"totalNetSales"`
+	TotalCostOfSales        int64   `json:"totalCostOfSales"`
+	TotalOperatingExpenses  int64   `json:"totalOperatingExpenses"`
+	BasicEarningsPerShare   float32 `json:"basicEarningsPerShare"`
+	DilutedEarningsPerShare float32 `json:"dilutedEarningsPerShare"`
 }
 
 type Filing struct {
@@ -34,6 +36,12 @@ func ScrapeFinancialData(cik string, accessionNo string, primaryDoc string) ([]F
 	url := fmt.Sprintf("https://www.sec.gov/Archives/edgar/data/%s/%s/%s", cik, accessionNoNoDashes, primaryDoc)
 
 	// Create the request
+
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Error loading .env file")
+	}
+
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		log.Printf("Failed to create request: %v\n", err)
@@ -84,24 +92,24 @@ func ScrapeFinancialData(cik string, accessionNo string, primaryDoc string) ([]F
 				// Look for specific fields based on the text in the cell
 				switch {
 				case strings.Contains(cellText, "total net sales") || strings.Contains(cellText, "net sales") || strings.Contains(cellText, "net revenue") || strings.Contains(cellText, "total revenues") || strings.Contains(cellText, "revenues"):
-					value := extractStringFromNextCell(row, k, 2)
+					value := extractIntFromNextCell(row, k, 2)
 					data.TotalNetSales = value
 					found = true
 				case strings.Contains(cellText, "total cost of sales"):
-					value := extractStringFromNextCell(row, k, 1)
+					value := extractIntFromNextCell(row, k, 1)
 					data.TotalCostOfSales = value
 					found = true
 				case strings.Contains(cellText, "total operating expenses"):
-					value := extractStringFromNextCell(row, k, 1)
+					value := extractIntFromNextCell(row, k, 1)
 					data.TotalOperatingExpenses = value
 					found = true
 
 				case strings.Contains(cellText, "basic"):
-					value := extractStringFromNextCell(row, k, 2)
+					value := extractFloatFromNextCell(row, k, 2)
 					data.BasicEarningsPerShare = value
 					found = true
 				case strings.Contains(cellText, "diluted"):
-					value := extractStringFromNextCell(row, k, 2)
+					value := extractFloatFromNextCell(row, k, 2)
 					data.DilutedEarningsPerShare = value
 					found = true
 				}
@@ -119,13 +127,43 @@ func ScrapeFinancialData(cik string, accessionNo string, primaryDoc string) ([]F
 	return financialDataReports, nil
 }
 
-// Helper function to extract a string from the next cell in the row
-func extractStringFromNextCell(row *goquery.Selection, index int, skip int) string {
-	var value string
+func extractIntFromNextCell(row *goquery.Selection, index int, skip int) int64 {
+	var value int64
 	row.Find("td").Each(func(k int, cell *goquery.Selection) {
 		if k == index+skip {
 			// Get the text from the next cell
-			value = strings.TrimSpace(cell.Text())
+			text := strings.TrimSpace(cell.Text())
+			// Remove commas
+			cleanedText := strings.ReplaceAll(text, ",", "")
+			// Convert string to integer (int64 to handle large values)
+			parsedValue, err := strconv.ParseInt(cleanedText, 10, 64)
+			if err != nil {
+				log.Println("Error parsing integer:", err)
+				return
+			}
+			// Multiply by 1,000,000 to account for the value being in millions
+			value = parsedValue * 1000000
+		}
+	})
+	return value
+}
+
+func extractFloatFromNextCell(row *goquery.Selection, index int, skip int) float32 {
+	var value float32
+	row.Find("td").Each(func(k int, cell *goquery.Selection) {
+		if k == index+skip {
+			// Get the text from the next cell
+			text := strings.TrimSpace(cell.Text())
+			// Remove commas
+			cleanedText := strings.ReplaceAll(text, ",", "")
+			// Convert string to float32
+			parsedValue, err := strconv.ParseFloat(cleanedText, 32)
+			if err != nil {
+				log.Println("Error parsing float:", err)
+				return
+			}
+			// Cast to float32
+			value = float32(parsedValue)
 		}
 	})
 	return value
