@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
@@ -40,7 +41,8 @@ func ScrapeFinancialData(cik string, accessionNo string, primaryDoc string) ([]F
 	}
 
 	// Set a custom User-Agent header
-	req.Header.Set("User-Agent", "KevinWebScraping/1.0 (kevinroosey@gmail.com)")
+	reqHeaderStr := fmt.Sprintf("%s (%s)", os.Getenv("APP_NAME"), os.Getenv("APP_EMAIL"))
+	req.Header.Set("User-Agent", reqHeaderStr)
 
 	// Send the request
 	client := &http.Client{}

@@ -33,7 +33,7 @@ func FetchFilings(w http.ResponseWriter, r *http.Request) {
 		log.Fatalf("Error finding CIK: %v\n", err)
 	}
 
-	// Make request to the EDGAR API
+	// Create url request to EDGAR
 	url := fmt.Sprintf("https://data.sec.gov/submissions/CIK%s.json", cik)
 
 	// Create a new request
@@ -45,7 +45,8 @@ func FetchFilings(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Set required headers
-	req.Header.Set("User-Agent", "YourAppName/1.0 (your-email@example.com)")
+	reqHeaderStr := fmt.Sprintf("%s (%s)", os.Getenv("APP_NAME"), os.Getenv("APP_EMAIL"))
+	req.Header.Set("User-Agent", reqHeaderStr)
 
 	// Send the request
 	client := &http.Client{}
